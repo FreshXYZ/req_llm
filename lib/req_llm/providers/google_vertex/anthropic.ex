@@ -82,9 +82,27 @@ defmodule ReqLLM.Providers.GoogleVertex.Anthropic do
     |> AdapterHelpers.maybe_add_param(:top_k, opts[:top_k])
     |> AdapterHelpers.maybe_add_param(:stop_sequences, opts[:stop_sequences])
     |> AdapterHelpers.maybe_add_thinking(opts)
+    |> maybe_add_additional_fields(opts)
     |> maybe_add_tools(opts)
     |> maybe_add_output_format(operation, mode, opts)
     |> Anthropic.maybe_apply_prompt_caching(opts)
+  end
+
+  # Everything under `provider_options.additional_model_request_fields` other
+  # than `thinking` (which `maybe_add_thinking/2` validates) goes into the
+  # body as-is, the same contract Bedrock gives the key. That is how a caller
+  # reaches Anthropic request fields this adapter has no option for, such as
+  # `output_config.effort`.
+  defp maybe_add_additional_fields(body, opts) do
+    case get_in(opts, [:provider_options, :additional_model_request_fields]) do
+      fields when is_map(fields) and map_size(fields) > 0 ->
+        fields
+        |> Map.drop([:thinking, "thinking"])
+        |> Enum.reduce(body, fn {key, value}, acc -> Map.put(acc, key, value) end)
+
+      _ ->
+        body
+    end
   end
 
   defp maybe_add_output_format(body, :object, :json_schema, opts) do

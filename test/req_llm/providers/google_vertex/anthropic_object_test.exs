@@ -97,4 +97,27 @@ defmodule ReqLLM.Providers.GoogleVertex.AnthropicObjectTest do
       assert decode([]).object == nil
     end
   end
+
+  describe "format_request/3 additional_model_request_fields" do
+    test "fields other than thinking land in the body as given" do
+      body =
+        build_body(
+          provider_options: [
+            additional_model_request_fields: %{
+              thinking: %{type: "adaptive"},
+              output_config: %{effort: "medium"}
+            }
+          ]
+        )
+
+      assert body[:output_config] == %{effort: "medium"}
+      # `thinking` is not copied verbatim: maybe_add_thinking/2 owns it.
+      refute Map.has_key?(body, :additional_model_request_fields)
+    end
+
+    test "no additional fields leaves the body alone" do
+      body = build_body([])
+      refute Map.has_key?(body, :output_config)
+    end
+  end
 end
