@@ -536,19 +536,6 @@ defmodule ReqLLM.Schema do
   """
   @spec to_anthropic_format(ReqLLM.Tool.t()) :: map()
   def to_anthropic_format(%ReqLLM.Tool{} = tool) do
-    base = %{
-      "name" => tool.name,
-      "description" => tool.description,
-      "input_schema" => to_json(tool.parameter_schema)
-    }
-
-    base =
-      if tool.strict do
-        Map.put(base, "strict", true)
-      else
-        base
-      end
-
     anthropic_options =
       tool
       |> ReqLLM.Tool.provider_options(:anthropic)
@@ -564,7 +551,30 @@ defmodule ReqLLM.Schema do
       ])
       |> stringify_tool_option_keys()
 
-    Map.merge(base, anthropic_options)
+    case anthropic_options do
+      # An Anthropic server tool (tool search, web search, ...) is declared
+      # by its versioned `type` and takes no description or input schema:
+      # the API rejects both as extra inputs. Everything else in the options
+      # is that tool's own configuration.
+      %{"type" => _} ->
+        Map.put(anthropic_options, "name", tool.name)
+
+      _ ->
+        base = %{
+          "name" => tool.name,
+          "description" => tool.description,
+          "input_schema" => to_json(tool.parameter_schema)
+        }
+
+        base =
+          if tool.strict do
+            Map.put(base, "strict", true)
+          else
+            base
+          end
+
+        Map.merge(base, anthropic_options)
+    end
   end
 
   @doc """

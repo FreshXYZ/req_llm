@@ -1458,4 +1458,38 @@ defmodule ReqLLM.SchemaTest do
       assert Schema.apply_property_ordering(nil) == nil
     end
   end
+
+  describe "to_anthropic_format/1 server tools" do
+    test "a tool with an anthropic type option encodes as {type, name} plus its config" do
+      {:ok, tool} =
+        ReqLLM.Tool.new(
+          name: "tool_search_tool_regex",
+          description: "",
+          parameter_schema: [],
+          callback: fn _ -> {:ok, nil} end,
+          provider_options: [anthropic: [type: "tool_search_tool_regex_20251119"]]
+        )
+
+      assert ReqLLM.Schema.to_anthropic_format(tool) == %{
+               "type" => "tool_search_tool_regex_20251119",
+               "name" => "tool_search_tool_regex"
+             }
+    end
+
+    test "a regular tool still carries defer_loading from its options" do
+      {:ok, tool} =
+        ReqLLM.Tool.new(
+          name: "get_weather",
+          description: "Weather",
+          parameter_schema: [city: [type: :string, required: true]],
+          callback: fn _ -> {:ok, nil} end,
+          provider_options: [anthropic: [defer_loading: true]]
+        )
+
+      formatted = ReqLLM.Schema.to_anthropic_format(tool)
+      assert formatted["defer_loading"] == true
+      assert formatted["description"] == "Weather"
+      assert is_map(formatted["input_schema"])
+    end
+  end
 end
