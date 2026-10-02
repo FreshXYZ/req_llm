@@ -118,6 +118,7 @@ defmodule ReqLLM.Providers.GoogleVertex.ConfigTest do
       {:ok, request} =
         GoogleVertex.prepare_request(:chat, model, context_fixture(),
           project_id: "config-project",
+          access_token: "test-token",
           region: "global"
         )
 
@@ -133,6 +134,7 @@ defmodule ReqLLM.Providers.GoogleVertex.ConfigTest do
       {:ok, request} =
         GoogleVertex.prepare_request(:chat, model, context_fixture(),
           project_id: "config-project",
+          access_token: "test-token",
           region: "us"
         )
 
@@ -148,6 +150,7 @@ defmodule ReqLLM.Providers.GoogleVertex.ConfigTest do
       {:ok, request} =
         GoogleVertex.prepare_request(:chat, model, context_fixture(),
           project_id: "config-project",
+          access_token: "test-token",
           region: "eu"
         )
 
@@ -163,6 +166,7 @@ defmodule ReqLLM.Providers.GoogleVertex.ConfigTest do
       {:ok, request} =
         GoogleVertex.prepare_request(:chat, model, context_fixture(),
           project_id: "config-project",
+          access_token: "test-token",
           region: "us-east5"
         )
 
