@@ -593,7 +593,11 @@ defmodule ReqLLM.Provider.Defaults do
 
   @spec finch_option(Req.Request.t()) :: keyword()
   def finch_option(%Req.Request{} = request) do
-    [finch: request.options[:finch] || ReqLLM.Application.finch_name()]
+    case request.options[:finch] do
+      nil -> [finch: [name: ReqLLM.Application.finch_name()]]
+      name when is_atom(name) -> [finch: [name: name]]
+      opts -> [finch: opts]
+    end
   end
 
   @doc """
